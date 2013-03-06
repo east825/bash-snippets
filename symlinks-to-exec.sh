@@ -2,7 +2,12 @@
 
 set -e
 
-src="${1:? sorces dir not set}"
+if [[ "$1" == "-h" ]]; then
+    echo "usage: $0 src-dir [dst-dir]"
+    exit 1
+fi
+
+src="${1:? sources dir not set}"
 dst="${2:-.}"
 
 src="$(readlink -f $src)"
