@@ -1,53 +1,51 @@
 #!/bin/bash
-export ECD_DIRLIST
-ECD_DIRLIST_LENGTH=5
+dirlist=($(pwd))
+MAX_DIRLIST_LENGTH=5
 # set -x
 
-ecd(){
+ecd_cd() {
+    cd $@
     # first reoreder all other directories in list
-    for ((i=$ECD_DIRLIST_LENGTH - 1; i > 0; i--))
-    do
-        ECD_DIRLIST[i]=${ECD_DIRLIST[i-1]}
-    done
-
-    cd $1
-    ECD_DIRLIST[0]=$(pwd)
+    if (( ${#dirlist[@]} < MAX_DIRLIST_LENGTH)); then
+        dirlist+=("$(pwd)")
+    else
+        for ((i = $MAX_DIRLIST_LENGTH - 1; i > 0; i--)); do
+            dirlist[i]="${dirlist[i-1]}"
+        done
+        dirlist[0]="$(pwd)"
+    fi
 }
 
-ecdlist(){
+ecd_list() {
     local name
     # show all directroies
-    for ((i=0; i < $ECD_DIRLIST_LENGTH; i++))
-    do
+    for ((i = 0; i < ${#dirlist[@]}; i++)); do
         # if name is too long, truncate it
-        if (( ${#ECD_DIRLIST[i]} > 70 ));
-        then
+        if (( ${#dirlist[i]} > 70 )); then
             # take first 27 elements and last 40
-            name="${ECD_DIRLIST[i]:0:27}...${ECD_DIRLIST[i]: -40}"
+            name="${dirlist[i]:0:27}...${dirlist[i]: -40}"
         else
-            name="${ECD_DIRLIST[i]}"
+            name="${dirlist[i]}"
         fi
-        printf " %02d | %-70s\n" $((i+1)) $name
+        printf " %02d | %-70s\n" $i $name
     done
     # accept choice
     read -p "enter directory number: "
     # just <Enter> shouldn't be interpreted as error
-    if [[ -n $REPLY ]];
-    then
-        # check correct input: input is number and 0 < input <= ECD_DIRLIST_LENGTH
-        if [[ $REPLY =~ ^[0-9]+$ ]] && (( $REPLY <= ECD_DIRLIST_LENGTH && $REPLY > 0));
-        then
-            # if element isn't empty
-            if [[ -n ${ECD_DIRLIST[REPLY-1]} ]];
-            then 
-                ecd ${ECD_DIRLIST[REPLY-1]}
-            else
-                echo "entry is empty" >&2
-            fi
+    if [[ -n $REPLY ]]; then
+        # check correct input: input is number and 0 < input <= MAX_DIRLIST_LENGTH
+        if [[ $REPLY =~ ^[0-9]+$ ]] && (( REPLY >= 0 && REPLY < ${#dirlist[@]} )); then
+            ecd_cd "${dirlist[REPLY]}"
         else
-            echo "incorrect input" >&2
+            echo "invalid choice" >&2
         fi
     fi
 }
-
+ecd() {
+    if [[ "$1" == "-l" ]]; then
+        ecd_list
+    else
+        ecd_cd $@
+    fi
+}
 # set +x
