@@ -10,7 +10,7 @@ fi
 src="${1:? sources dir not set}"
 dst="${2:-.}"
 
-src="$(readlink -f $src)"
+src="$(readlink -e $src)"
 
 find "$src" -type f -executable | while read path; do
     target="$path"
