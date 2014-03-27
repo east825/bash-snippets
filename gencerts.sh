@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 COUNTRY="RU" # 2-letter code
 STATE="Russia"
 LOCATION="St.Petersburg"
 
-CA_ORGANIZATION="Trackers Test"
+CA_ORGANIZATION="Certificates Tests"
 CA_UNIT="Certificate Authority"
-CA_DOMAIN="trackers-tests.labs.intellij.net"
+CA_DOMAIN="certificates-tests.labs.intellij.net"
 
 EXPIRED_SUBDOMAIN="expired"
 EXPIRED_UNIT="Expired Certificate Test"
@@ -18,8 +18,8 @@ SELF_SIGNED_UNIT="Self-signed Certificate Test"
 TRUSTED_SUBDOMAIN="trusted"
 TRUSTED_UNIT="Trusted Certificate Signed by CA Test"
 
-WRONG_HOSTNAME_SUBDOMAIN="wrong-hostname"
-WRONG_HOSTNAME_UNIT="Certificate with Wrong Hostname Test"
+WRONG_HOSTNAME_SUBDOMAIN="illegal"
+WRONG_HOSTNAME_UNIT="Certificate With Wrong Hostname Test"
 
 CONFIG="\
 [ ca ]
@@ -56,6 +56,8 @@ commonName             = supplied
 emailAddress           = optional
 "
 
+KEY_LENGTH=8192
+
 generate() {
     local domain="${1:?domain name not specified}"
     local org_unit="${2:-Certificate Tests}"
@@ -65,7 +67,7 @@ generate() {
     local common_name="${domain}.${CA_DOMAIN}"
 
     echo "Generating CSR for $common_name..."
-    openssl req -nodes -newkey rsa:2048 \
+    openssl req -nodes -newkey rsa:${KEY_LENGTH} \
         -keyout "${domain}.key" -out "${domain}.csr" \
         -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${org_unit}/CN=${common_name}" &>/dev/null
     echo "Signing certificate for $common_name by CA..."
@@ -81,7 +83,8 @@ generate-self-signed() {
     local common_name="${domain}.${CA_DOMAIN}"
 
     echo "Generating self-signed certificate for $common_name..."
-    openssl req -x509 -nodes -newkey rsa:2048 -config config.txt \
+    openssl req -x509 -nodes -newkey rsa:${KEY_LENGTH} \
+        -days 3650 \
         -keyout "${domain}.key" -out "${domain}.crt" \
         -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${org_unit}/CN=${common_name}" &>/dev/null
 }
@@ -93,24 +96,37 @@ cleanup() {
     if [[ -e config.txt ]]; then
         rm config.txt
     fi
+    rm -f *.csr
 }
 
-echo "Cleaning up..."
+CA_PRIVATE_KEY="$1"
+CA_PUBLIC_KEY="$2"
+if [[ -z "$CA_PUBLIC_KEY" ]]; then
+    CA_PUBLIC_KEY="${CA_PRIVATE_KEY%.*}.crt"
+fi
+
+echo ">> Cleaning up..."
 cleanup
-echo "Creating OpenSSL configuration..."
+echo ">> Creating OpenSSL configuration..."
 echo "$CONFIG" > config.txt
 mkdir -p tmp
 echo 1000 > tmp/serial
 touch tmp/index.txt
 touch tmp/.rand
 
-echo "Generating CA..."
-# generate private key separately
-# openssl genrsa -out ca.key 8192
-openssl req -new -x509 -extensions v3_ca -nodes -newkey rsa:2048 \
-    -keyout ca.key -out ca.crt \
-    -days 3650 \
-    -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${CA_UNIT}/CN=${CA_DOMAIN}" &>/dev/null
+if [[ -e "$CA_PRIVATE_KEY" && -e "$CA_PUBLIC_KEY" ]]; then
+    echo ">> Using existing CA pair: $CA_PRIVATE_KEY and $CA_PUBLIC_KEY"
+    cp "$CA_PRIVATE_KEY" ca.key
+    cp "$CA_PUBLIC_KEY" ca.crt
+else
+    echo ">> Generating CA..."
+    # generate private key separately
+    # openssl genrsa -out ca.key ${KEY_LENGTH}
+    openssl req -new -x509 -extensions v3_ca -nodes -newkey rsa:${KEY_LENGTH} \
+        -keyout ca.key -out ca.crt \
+        -days 3650 \
+        -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${CA_UNIT}/CN=${CA_DOMAIN}" &>/dev/null
+fi
 
 echo ">> Generating certificate signed by CA..."
 generate "$TRUSTED_SUBDOMAIN" "$TRUSTED_UNIT"
@@ -120,9 +136,14 @@ generate "$EXPIRED_SUBDOMAIN" "$EXPIRED_UNIT" 20000101000000Z 20010101000000Z
 
 echo ">> Generating certificate signed by CA with wrong hostname..."
 generate "$WRONG_HOSTNAME_SUBDOMAIN" "$WRONG_HOSTNAME_UNIT"
+mv "${WRONG_HOSTNAME_SUBDOMAIN}.crt" "wrong-hostname.crt"
+mv "${WRONG_HOSTNAME_SUBDOMAIN}.key" "wrong-hostname.key"
 
 echo ">> Generating self-signed certificate..."
 generate-self-signed "$SELF_SIGNED_SUBDOMAIN" "$SELF_SIGNED_UNIT"
+
+echo ">> Cleaning up..."
+cleanup
 
 
 # rm config.txt
