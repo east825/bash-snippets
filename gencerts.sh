@@ -38,7 +38,7 @@ RANDFILE       = \$dir/.rand           # random number file
 
 default_days   = 3650                  # how long to certify for
 default_crl_days= 30                   # how long before next CRL
-default_md     = md5                   # md to use
+default_md     = sha512                # md to use
 
 policy         = policy_any            # default policy
 email_in_dn    = no                    # Don't add the email into cert DN
@@ -72,7 +72,7 @@ generate() {
         -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${org_unit}/CN=${common_name}" &>/dev/null
     echo "Signing certificate for $common_name by CA..."
     # can also set CA credential explicitly by -cert ca.crt -keyfile ca.key
-    yes | openssl ca -verbose -notext -config config.txt \
+    yes | openssl ca -md sha512 -verbose -notext -config config.txt \
         ${start_date:+ -startdate $start_date} ${end_date:+ -enddate $end_date} \
         -out "${domain}.crt" -infiles "${domain}.csr" &>/dev/null
 }
@@ -83,7 +83,7 @@ generate-self-signed() {
     local common_name="${domain}.${CA_DOMAIN}"
 
     echo "Generating self-signed certificate for $common_name..."
-    openssl req -x509 -nodes -newkey rsa:${KEY_LENGTH} \
+    openssl req -x509 -nodes -sha512 -newkey rsa:${KEY_LENGTH} \
         -days 3650 \
         -keyout "${domain}.key" -out "${domain}.crt" \
         -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${org_unit}/CN=${common_name}" &>/dev/null
@@ -122,7 +122,7 @@ else
     echo ">> Generating CA..."
     # generate private key separately
     # openssl genrsa -out ca.key ${KEY_LENGTH}
-    openssl req -new -x509 -extensions v3_ca -nodes -newkey rsa:${KEY_LENGTH} \
+    openssl req -new -x509 -sha512 -extensions v3_ca -nodes -newkey rsa:${KEY_LENGTH} \
         -keyout ca.key -out ca.crt \
         -days 3650 \
         -subj "/C=${COUNTRY}/ST=${STATE}/L=${LOCATION}/O=${CA_ORGANIZATION}/OU=${CA_UNIT}/CN=${CA_DOMAIN}" &>/dev/null
