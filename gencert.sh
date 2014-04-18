@@ -5,7 +5,7 @@ set -e
 
 PROG_NAME="$(basename $0)"
 
-# DEBUG=true
+DEBUG=true
 if [[ -n "$DEBUG" ]]; then
     set -x
     TEMP_DIR="tmp"
@@ -185,6 +185,12 @@ O                      = ${ORGANIZATION}
 OU                     = ${ORGANIZATIONAL_UNIT}
 CN                     = ${COMMON_NAME}
 emailAddress           = ${EMAIL}
+
+[ v3_ca ]
+
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer:always
+basicConstraints = CA:true
 "
 
 
