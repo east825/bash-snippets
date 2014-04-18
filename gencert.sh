@@ -18,16 +18,27 @@ USAGE="\
 Usage: $PROG_NAME [--self-signed|--CA|--signed-by CERT KEY] NAME
 
 Options:
--C, --country COUNTRY              Country (C) field. Two letter code. [default: RU].
--S, --state STATE                  State (S) field. [default: St.Petersburg].
--L, --locality LOCALITY            Locality (L) field. [default: St.Petersburg].
--O, --organization ORGANIZATION]   Organization (O) field. [default: JetBrains].
---OU, --organizational-unit UNIT   Organizational unit field. [default: Certificates Tests].
---CN, --common-name NAME           Common name (CN) field. Mandatory field.   
---email EMAIL                      Email specified in certificate. [default: mikhail.golubev@jetbrains.com].
+-C, --country COUNTRY               Country (C) field. Two letter code. [default: RU].
+-S, --state STATE                   State (S) field. [default: St.Petersburg].
+-L, --locality LOCALITY             Locality (L) field. [default: St.Petersburg].
+-O, --organization ORGANIZATION]    Organization (O) field. [default: JetBrains].
+--OU, --organizational-unit UNIT    Organizational unit field. [default: Certificates Tests].
+--CN, --common-name NAME            Common name (CN) field. Mandatory field.   
+--email EMAIL                       Email specified in certificate. [default: mikhail.golubev@jetbrains.com].
+
+--start-date DATE                   End date of certificate legibility in format YYYYMMDDHHMMSSZ.
+--end-date DATE                     Start date of certificate legibility in format YYYYMMDDHHMMSSZ.
+                                    These options are useful for generating expired certificates.
+
+--self-signed                       Generate self-signed certificate.
+--CA                                Generate self-signed certificate authority.
+--signed-by CERT KEY                Generate certificate signed by authority specified by certificate 
+                                    and private key pair.           
+                                    If neither of modes specified generated certificate will be signed
+                                    by system default authority.
 
 Arguments:
-NAME                               Name of output certificate, private key or CSR without extension.
+NAME                                Name of output certificate, private key or CSR without extension.
 "
 
 COUNTRY="RU"
@@ -70,7 +81,7 @@ while (( $# > 0 )); do
         -C|--country) 
             COUNTRY="${2:? Error: Country expected}" ;;
         -L|--locality)
-            LOCALITY="${2:? Error: Location expected}" ;;
+            LOCALITY="${2:? Error: Locality expected}" ;;
         -O|--organization)
             ORGANIZATION="${2:? Error: Organization expected}" ;;
         --OU|--organizational-unit)
@@ -79,6 +90,10 @@ while (( $# > 0 )); do
             COMMON_NAME="${2:? Error: Common name (domain pattern) expected}" ;;
         --email)
             EMAIL="${2:? Error: Email expected}" ;;
+        --start-date)
+            START_DATE="${2:? Error: Start date expected}" ;;
+        --end-date)
+            END_DATE="${2:? Error: End date expected}" ;;
         --self-signed)
             MODE="self-signed"
             shift; continue ;;
@@ -215,6 +230,7 @@ else
     if [[ "$MODE" == "default" ]]; then
         message "Using default CA to sign CSR..."
         openssl ca -md sha512 -verbose -notext \
+            ${START_DATE:+ -startdate $START_DATE} ${END_DATE:+ -enddate $END_DATE} \
             -infiles "${NAME}.csr" -out "${NAME}.crt" 2>&1 | debug
     else 
         message "Using CA ${CA_CERTIFICATE} to sign CSR..."
@@ -223,7 +239,7 @@ else
             # -CA "$CA_CERTIFICATE" -CAkey "$CA_KEY" -CAserial serial.srl \
             # -in "${NAME}.csr" -out "${NAME}.crt"
         yes | openssl ca -md sha512 -verbose -notext -config config.cfg \
-            ${start_date:+ -startdate $start_date} ${end_date:+ -enddate $end_date} \
+            ${START_DATE:+ -startdate $START_DATE} ${END_DATE:+ -enddate $END_DATE} \
             -out "${NAME}.crt" -infiles "${NAME}.csr" 2>&1 | debug
     fi
 fi    
