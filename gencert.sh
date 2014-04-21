@@ -41,6 +41,9 @@ Options:
 
 Arguments:
 NAME                                Name of output certificate, private key or CSR without extension.
+
+Example:
+    ${PROG_NAME} --pkcs12 --signed-by root.crt root.key --CN client.unit-371 --OU 'Client Authentication' client-auth
 "
 
 COUNTRY="RU"
