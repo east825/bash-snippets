@@ -37,6 +37,8 @@ Options:
                                     If neither of modes specified generated certificate will be signed
                                     by system default authority.
 
+--pkcs12                            Export genearated certificate/key pair in PKCS12 format (.p12)
+
 Arguments:
 NAME                                Name of output certificate, private key or CSR without extension.
 "
@@ -77,29 +79,29 @@ debug() {
 while (( $# > 0 )); do
     case "$1" in 
         -h|--help)
-            echo "$USAGE"; exit ;; 
+            echo "$USAGE"; exit;; 
         -C|--country) 
-            COUNTRY="${2:? Error: Country expected}" ;;
+            COUNTRY="${2:? Error: Country expected}"; shift 2;;
         -L|--locality)
-            LOCALITY="${2:? Error: Locality expected}" ;;
+            LOCALITY="${2:? Error: Locality expected}"; shift 2;;
         -O|--organization)
-            ORGANIZATION="${2:? Error: Organization expected}" ;;
+            ORGANIZATION="${2:? Error: Organization expected}"; shift 2;;
         --OU|--organizational-unit)
-            ORGANIZATIONAL_UNIT="${2:? Error: Organizational unit expected}" ;;
+            ORGANIZATIONAL_UNIT="${2:? Error: Organizational unit expected}"; shift 2;;
         --CN|--common-name)
-            COMMON_NAME="${2:? Error: Common name (domain pattern) expected}" ;;
+            COMMON_NAME="${2:? Error: Common name (domain pattern) expected}"; shift 2;;
         --email)
-            EMAIL="${2:? Error: Email expected}" ;;
+            EMAIL="${2:? Error: Email expected}"; shift 2;;
         --start-date)
-            START_DATE="${2:? Error: Start date expected}" ;;
+            START_DATE="${2:? Error: Start date expected}"; shift 2;;
         --end-date)
-            END_DATE="${2:? Error: End date expected}" ;;
+            END_DATE="${2:? Error: End date expected}"; shift 2;;
         --self-signed)
-            MODE="self-signed"
-            shift; continue ;;
+            MODE="self-signed"; shift;;
+        --pkcs12)
+            PKCS12=true; shift;;
         --CA)
-            MODE="CA"
-            shift; continue ;;
+            MODE="CA"; shift;;
         --signed-by)
             MODE="signed"
             shift
@@ -108,14 +110,13 @@ while (( $# > 0 )); do
             fi
             CA_CERTIFICATE="$1"
             CA_KEY="$2"
-            shift 2; continue ;;
+            shift 2;;
         -*)
-            error "Unknown option: $1" ;;
+            error "Unknown option: $1";;
         *)  
             # positionals next
-            break ;;
+            break;;
     esac
-    shift 2
 done
 
 if [[ $# == 0 || -z "$1" ]]; then
@@ -249,6 +250,11 @@ else
             -out "${NAME}.crt" -infiles "${NAME}.csr" 2>&1 | debug
     fi
 fi    
+
+if [[ -n "$PKCS12" ]]; then
+    message "Exporting PKCS #12 archive ${NAME}.p12..."
+    openssl pkcs12 -export -in "${NAME}.crt" -inkey "${NAME}.key" -out "${NAME}.p12"
+fi
 
 if [[ -z "$DEBUG" ]]; then    
     rm -rf "$TEMP_DIR"
