@@ -19,7 +19,7 @@ Usage: $PROG_NAME [--self-signed|--CA|--signed-by CERT KEY] NAME
 
 Options:
 -C, --country COUNTRY               Country (C) field. Two letter code. [default: RU].
--S, --state STATE                   State (S) field. [default: St.Petersburg].
+--ST, --state STATE                   State (S) field. [default: St.Petersburg].
 -L, --locality LOCALITY             Locality (L) field. [default: St.Petersburg].
 -O, --organization ORGANIZATION]    Organization (O) field. [default: JetBrains].
 --OU, --organizational-unit UNIT    Organizational unit field. [default: Certificates Tests].
@@ -87,6 +87,8 @@ while (( $# > 0 )); do
             COUNTRY="${2:? Error: Country expected}"; shift 2;;
         -L|--locality)
             LOCALITY="${2:? Error: Locality expected}"; shift 2;;
+        --ST|--state)
+            STATE="${2:? Error: State expected}"; shift 2;;
         -O|--organization)
             ORGANIZATION="${2:? Error: Organization expected}"; shift 2;;
         --OU|--organizational-unit)
@@ -188,7 +190,7 @@ L                      = ${LOCALITY}
 O                      = ${ORGANIZATION}
 OU                     = ${ORGANIZATIONAL_UNIT}
 CN                     = ${COMMON_NAME}
-emailAddress           = ${EMAIL}
+# emailAddress           = ${EMAIL}
 
 [ v3_ca ]
 

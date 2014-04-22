@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-CA_ORGANIZATION="Certificates Tests"
 CA_UNIT="Certificate Authority"
 CA_DOMAIN="${1:-certificates-tests.labs.intellij.net}"
 
@@ -16,6 +15,9 @@ TRUSTED_UNIT="Trusted Certificate Signed by CA Test"
 
 WRONG_HOSTNAME_SUBDOMAIN="illegal"
 WRONG_HOSTNAME_UNIT="Certificate With Wrong Hostname Test"
+
+CLIENT_AUTH_SUBDOMAIN="client-auth"
+CLIENT_AUTH_UNIT="Client Authentication Tests" 
 
 echo ">> Generating CA..."
 ./gencert.sh --CA --OU "$CA_UNIT" --CN "$CA_DOMAIN" ca 
@@ -35,7 +37,16 @@ echo ">> Generating certificate signed by CA with wrong hostname..."
 
 echo ">> Generating self-signed certificate..."
 ./gencert.sh --self-signed --OU "$SELF_SIGNED_UNIT" \
-    --CN "${SELF_SIGNED_SUBDOMAIN}.${CA_DOMAIN}" "${SELF_SIGNED_SUBDOMAIN}"
+    --CN "${SELF_SIGNED_SUBDOMAIN}.${CA_DOMAIN}" "$SELF_SIGNED_SUBDOMAIN"
+
+echo ">> Generating certificate signed by CA for client authentication..."
+/gencert.sh --signed-by ca.crt ca.key --OU "$CLIENT_AUTH_UNIT" \
+    --CN "${CLIENT_AUTH_SUBDOMAIN}.${CA_DOMAIN}" "$CLIENT_AUTH_SUBDOMAIN"
+
+echo ">> Generating client certificate..."
+/gencert.sh --pkcs12 --signed-by ca.crt ca.key --OU "User certificate used for client authentication" \
+    --CN "user@${CLIENT_AUTH_SUBDOMAIN}.${CA_DOMAIN}" user
+
 
 
 
