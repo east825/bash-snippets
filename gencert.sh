@@ -15,32 +15,33 @@ else
 fi
 
 USAGE="\
-Usage: $PROG_NAME [--self-signed|--CA|--signed-by CERT KEY] NAME
+Usage:
+    $PROG_NAME [--self-signed|--CA|--signed-by CERT KEY] NAME
 
 Options:
--C, --country COUNTRY               Country (C) field. Two letter code. [default: RU].
---ST, --state STATE                   State (S) field. [default: St.Petersburg].
--L, --locality LOCALITY             Locality (L) field. [default: St.Petersburg].
--O, --organization ORGANIZATION]    Organization (O) field. [default: JetBrains].
---OU, --organizational-unit UNIT    Organizational unit field. [default: Certificates Tests].
---CN, --common-name NAME            Common name (CN) field. Mandatory field.   
---email EMAIL                       Email specified in certificate. [default: mikhail.golubev@jetbrains.com].
+    -C, --country COUNTRY               Country (C) field. Two letter code. [default: RU].
+    --ST, --state STATE                   State (S) field. [default: St.Petersburg].
+    -L, --locality LOCALITY             Locality (L) field. [default: St.Petersburg].
+    -O, --organization ORGANIZATION]    Organization (O) field. [default: JetBrains].
+    --OU, --organizational-unit UNIT    Organizational unit field. [default: Certificates Tests].
+    --CN, --common-name NAME            Common name (CN) field. Mandatory field.
+    --email EMAIL                       Email specified in certificate. [default: mikhail.golubev@jetbrains.com].
 
---start-date DATE                   End date of certificate legibility in format YYYYMMDDHHMMSSZ.
---end-date DATE                     Start date of certificate legibility in format YYYYMMDDHHMMSSZ.
-                                    These options are useful for generating expired certificates.
+    --start-date DATE                   End date of certificate legibility in format YYYYMMDDHHMMSSZ.
+    --end-date DATE                     Start date of certificate legibility in format YYYYMMDDHHMMSSZ.
+                                        These options are useful for generating expired certificates.
 
---self-signed                       Generate self-signed certificate.
---CA                                Generate self-signed certificate authority.
---signed-by CERT KEY                Generate certificate signed by authority specified by certificate 
-                                    and private key pair.           
-                                    If neither of modes specified generated certificate will be signed
-                                    by system default authority.
+    --self-signed                       Generate self-signed certificate.
+    --CA                                Generate self-signed certificate authority.
+    --signed-by CERT KEY                Generate certificate signed by authority specified by certificate
+                                        and private key pair.
+                                        If neither of modes specified generated certificate will be signed
+                                        by system default authority.
 
---pkcs12                            Export genearated certificate/key pair in PKCS12 format (.p12)
+    --pkcs12                            Export genearated certificate/key pair in PKCS12 format (.p12)
 
 Arguments:
-NAME                                Name of output certificate, private key or CSR without extension.
+    NAME                                Name of output certificate, private key or CSR without extension.
 
 Example:
     ${PROG_NAME} --pkcs12 --signed-by root.crt root.key --CN client.unit-371 --OU 'Client Authentication' client-auth
