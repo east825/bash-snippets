@@ -40,11 +40,11 @@ echo ">> Generating self-signed certificate..."
     --CN "${SELF_SIGNED_SUBDOMAIN}.${CA_DOMAIN}" "$SELF_SIGNED_SUBDOMAIN"
 
 echo ">> Generating certificate signed by CA for client authentication..."
-/gencert.sh --signed-by ca.crt ca.key --OU "$CLIENT_AUTH_UNIT" \
+./gencert.sh --signed-by ca.crt ca.key --OU "$CLIENT_AUTH_UNIT" \
     --CN "${CLIENT_AUTH_SUBDOMAIN}.${CA_DOMAIN}" "$CLIENT_AUTH_SUBDOMAIN"
 
 echo ">> Generating client certificate..."
-/gencert.sh --pkcs12 --signed-by ca.crt ca.key --OU "User certificate used for client authentication" \
+./gencert.sh --pkcs12 --signed-by ca.crt ca.key --OU "User certificate used for client authentication" \
     --CN "user@${CLIENT_AUTH_SUBDOMAIN}.${CA_DOMAIN}" user
 
 
