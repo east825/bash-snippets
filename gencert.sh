@@ -19,13 +19,13 @@ Usage:
     $PROG_NAME [--self-signed|--CA|--signed-by CERT KEY] NAME
 
 Options:
-    -C, --country COUNTRY               Country (C) field. Two letter code. [default: RU].
-    --ST, --state STATE                   State (S) field. [default: St.Petersburg].
-    -L, --locality LOCALITY             Locality (L) field. [default: St.Petersburg].
-    -O, --organization ORGANIZATION]    Organization (O) field. [default: JetBrains].
-    --OU, --organizational-unit UNIT    Organizational unit field. [default: Certificates Tests].
+    -C, --country COUNTRY               Country (C) field. Two letter code. [default: RU]
+    --ST, --state STATE                 State (S) field [default: St.Petersburg]
+    -L, --locality LOCALITY             Locality (L) field. [default: St.Petersburg]
+    -O, --organization ORGANIZATION]    Organization (O) field. [default: JetBrains]
+    --OU, --organizational-unit UNIT    Organizational unit field. [default: Certificates Tests]
     --CN, --common-name NAME            Common name (CN) field. Mandatory field.
-    --email EMAIL                       Email specified in certificate. [default: mikhail.golubev@jetbrains.com].
+    --email EMAIL                       Email specified in certificate. [default: mikhail.golubev@jetbrains.com]
 
     --start-date DATE                   End date of certificate legibility in format YYYYMMDDHHMMSSZ.
     --end-date DATE                     Start date of certificate legibility in format YYYYMMDDHHMMSSZ.
