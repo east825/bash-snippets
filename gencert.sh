@@ -39,6 +39,7 @@ Options:
                                         by system default authority.
 
     --pkcs12                            Export genearated certificate/key pair in PKCS12 format (.p12)
+    --password                          Passphrase for PKCS12 archive. [default: NAME]
 
 Arguments:
     NAME                                Name of output certificate, private key or CSR without extension.
@@ -106,6 +107,8 @@ while (( $# > 0 )); do
             MODE="self-signed"; shift;;
         --pkcs12)
             PKCS12=true; shift;;
+        --password)
+            PASSWORD="${2:? Error. Password expected}"; shift 2;;
         --CA)
             MODE="CA"; shift;;
         --signed-by)
@@ -259,7 +262,7 @@ fi
 
 if [[ -n "$PKCS12" ]]; then
     message "Exporting PKCS #12 archive ${NAME}.p12..."
-    openssl pkcs12 -export -in "${NAME}.crt" -inkey "${NAME}.key" -out "${NAME}.p12"
+    openssl pkcs12 -export -in "${NAME}.crt" -inkey "${NAME}.key" -out "${NAME}.p12" -password pass:${PASSWORD:-$NAME}
 fi
 
 if [[ -z "$DEBUG" ]]; then    
