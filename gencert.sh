@@ -57,11 +57,7 @@ EMAIL="mikhail.golubev@jetbrains.com"
 
 MODE="default"
 
-if [[ -n "$DEBUG" ]]; then
-    DEFAULT_KEY_LENGTH=1024
-else
-    DEFAULT_KEY_LENGTH=8192
-fi
+DEFAULT_KEY_LENGTH=4096
 DEFAULT_PERIOD=3650 # days
 
 error() {
@@ -267,6 +263,6 @@ fi
 
 if [[ -z "$DEBUG" ]]; then    
     rm -rf "$TEMP_DIR"
-    rm -rf *.csr
+    rm -rf *.csr *.pem
 fi
 
