@@ -5,14 +5,14 @@ set -e
 
 PROG_NAME="$(basename $0)"
 
-DEBUG=true
-if [[ -n "$DEBUG" ]]; then
-    set -x
+# DEBUG=false
+# if [[ -n "$DEBUG" ]]; then
+    # set -x
     TEMP_DIR="tmp"
     mkdir -p "$TEMP_DIR"
-else
-    TEMP_DIR="$(mktemp -d --suffix=$PROG_NAME)" 
-fi
+# else
+    # TEMP_DIR="$(mktemp -d --suffix=$PROG_NAME)" 
+# fi
 
 USAGE="\
 Usage:
@@ -40,6 +40,10 @@ Options:
 
     --pkcs12                            Export genearated certificate/key pair in PKCS12 format (.p12)
     --password                          Passphrase for PKCS12 archive. [default: NAME]
+
+    -v, --verbose                       Print output of openssl commands.
+    --keep                              Do not delete openssl database and index at the end and use existing if any.
+    -h, --help                          Print this help and exit.
 
 Arguments:
     NAME                                Name of output certificate, private key or CSR without extension.
@@ -70,7 +74,7 @@ message() {
 }
 
 debug() {
-    if [[ -n "$DEBUG" ]]; then
+    if [[ -n "$VERBOSE" || -n "$DEBUG" ]]; then
         cat
     else
         cat &>/dev/null
@@ -79,12 +83,10 @@ debug() {
 
 # Don't fix indentation. It's intentional!
 ARGS=$(getopt -n "$PROG_NAME" \
-        --options hC:L:O: \
-        --long help,\
-self-signed,signed-by:,CA,\
-pkcs12,password:,\
-country:,locality:,ST:,state:,organization:,OU:,organizational-unit:,CN:,common-name:,email:,\
-start-date:,end-date: \
+        --options hvC:L:O: \
+        --long help,verbose,keep,self-signed,signed-by:,CA,pkcs12,password: \
+        --long country:,locality:,ST:,state:,organization:,OU:,organizational-unit:,CN:,common-name:,email: \
+        --long start-date:,end-date: \
         -- "$@")
 
 eval set -- "$ARGS"
@@ -93,6 +95,10 @@ while (( $# > 0 )); do
     case "$1" in 
         -h|--help)
             echo "$USAGE"; exit;; 
+        -v|--verbose)
+            VERBOSE=true; shift;;
+        --keep)
+            KEEP=true; shift;;
         -C|--country) 
             COUNTRY="${2:? Error: Country expected}"; shift 2;;
         -L|--locality)
@@ -220,15 +226,15 @@ basicConstraints = CA:true
 message "Writing stub config to config.cfg"
 echo "$CONFIG" > config.cfg
 
-if [[ ! -e "$SERIAL_FILE" || -z "$DEBUG" ]]; then
+if [[ ! -e "$SERIAL_FILE" || ( -z "$DEBUG" && -z "$KEEP" ) ]]; then
     echo "1000" > "$SERIAL_FILE"
 fi
 
-if [[ ! -e "$INDEX_FILE" || -z "$DEBUG" ]]; then
+if [[ ! -e "$INDEX_FILE" || ( -z "$DEBUG"  && -z "$KEEP" ) ]]; then
     > "$INDEX_FILE"
 fi
 
-if [[ ! -e "$RAND_FILE" || -z "$DEBUG" ]]; then
+if [[ ! -e "$RAND_FILE" || ( -z "$DEBUG"  && -z "$KEEP" ) ]]; then
     > "$RAND_FILE"
 fi
 
@@ -274,7 +280,7 @@ if [[ -n "$PKCS12" ]]; then
     openssl pkcs12 -export -in "${NAME}.crt" -inkey "${NAME}.key" -out "${NAME}.p12" -password pass:${PASSWORD:-$NAME}
 fi
 
-if [[ -z "$DEBUG" ]]; then    
+if [[ -z "$DEBUG" && -z "$KEEP" ]]; then    
     rm -rf "$TEMP_DIR"
     rm -rf *.csr *.pem
 fi
