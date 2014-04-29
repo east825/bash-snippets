@@ -34,7 +34,7 @@ Options:
     --self-signed                       Generate self-signed certificate.
     --CA                                Generate self-signed certificate authority.
     --signed-by CERT KEY                Generate certificate signed by authority specified by certificate
-                                        and private key pair.
+                                        and private key pair, separated by colon.
                                         If neither of modes specified generated certificate will be signed
                                         by system default authority.
 
@@ -77,6 +77,18 @@ debug() {
     fi
 }
 
+# Don't fix indentation. It's intentional!
+ARGS=$(getopt -n "$PROG_NAME" \
+        --options hC:L:O: \
+        --long help,\
+self-signed,signed-by:,CA,\
+pkcs12,password:,\
+country:,locality:,ST:,state:,organization:,OU:,organizational-unit:,CN:,common-name:,email:,\
+start-date:,end-date: \
+        -- "$@")
+
+eval set -- "$ARGS"
+
 while (( $# > 0 )); do
     case "$1" in 
         -h|--help)
@@ -109,13 +121,14 @@ while (( $# > 0 )); do
             MODE="CA"; shift;;
         --signed-by)
             MODE="signed"
-            shift
-            if (( $# < 2 )); then
-                error "CA should be set as pair path/to/certificate.crt path/to/key.key"
+            CA_CERTIFICATE="$( echo "$2" | cut -sd: -f1 )"
+            CA_KEY="$( echo "$2" | cut -sd: -f2 )"
+            if [[ -z "$CA_CERTIFICATE" || -z "$CA_KEY" ]]; then
+                error "CA should be set as pair path/to/certificate.crt:path/to/key.key"
             fi
-            CA_CERTIFICATE="$1"
-            CA_KEY="$2"
             shift 2;;
+        --)
+            shift; break;;
         -*)
             error "Unknown option: $1";;
         *)  
