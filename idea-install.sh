@@ -41,7 +41,7 @@ install() {
 
     info "Moving ${dest} to ${dest}.stable..."
     rm -rf "${dest}.stable"
-    mv -Tf "$dest" "${dest}.stable" || true
+    mv -Tf "$dest" "${dest}.stable" &> /dev/null || true
     info "Extracting ${archive}..."
     rm -rf _extracted
     mkdir _extracted
@@ -74,12 +74,12 @@ for file_name in $(ls); do
                     MAX_IDEA_IC_VERSION="$VERSION"
                 fi
                 ;;
-            pycharmPC-*.tar.gz)
+            pycharmPY-*.tar.gz)
                 if (( $(version_compare "$VERSION" "$MAX_PYCHARM_PY_VERSION") > 0 )); then
                     MAX_PYCHARM_PY_VERSION="$VERSION"
                 fi
                 ;;
-            pycharmPY-*.tar.gz)
+            pycharmPC-*.tar.gz)
                 if (( $(version_compare "$VERSION" "$MAX_PYCHARM_PC_VERSION") > 0 )); then
                     MAX_PYCHARM_PC_VERSION="$VERSION"
                 fi
