@@ -14,12 +14,10 @@ version_compare() {
         echo "1"; return
     fi
 
-    local major_first="$(cut -d. -f1 <<< $1)"
-    local minor_first="$(cut -d. -f2 <<< $1)"
-    local micro_first="$(cut -d. -f3 <<< $1)"
-    local major_second="$(cut -d. -f1 <<< $2)"
-    local minor_second="$(cut -d. -f2 <<< $2)"
-    local micro_second="$(cut -d. -f3 <<< $2)"
+    local major_first minor_first micro_first
+    local major_second minor_second micro_second
+    IFS=. read major_first minor_first micro_first <<< "$1"
+    IFS=. read major_second minor_second micro_second <<< "$2"
 
     if (( major_first != major_second )); then
         echo "$(( major_first - major_second ))"
