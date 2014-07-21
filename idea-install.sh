@@ -3,6 +3,8 @@
 set -e
 # set -x
 
+VERSION_PATTERN='[[:digit:]]\+\.[[:digit:]]\+\(\.[[:digit:]]\+\)\?'
+
 version_compare() {
     if [[ -z "$1" && -z "$2" ]]; then
         echo "0"; return
@@ -12,20 +14,24 @@ version_compare() {
         echo "1"; return
     fi
 
-    local major_first="$(cut -d. <<< $1 -f1)"
-    local minor_first="$(cut -d. <<< $1 -f2)"
-    local major_second="$(cut -d. <<< $2 -f1)"
-    local minor_second="$(cut -d. <<< $2 -f2)"
+    local major_first="$(cut -d. -f1 <<< $1)"
+    local minor_first="$(cut -d. -f2 <<< $1)"
+    local micro_first="$(cut -d. -f3 <<< $1)"
+    local major_second="$(cut -d. -f1 <<< $2)"
+    local minor_second="$(cut -d. -f2 <<< $2)"
+    local micro_second="$(cut -d. -f3 <<< $2)"
 
     if (( major_first != major_second )); then
         echo "$(( major_first - major_second ))"
-    else
+    elif (( minor_first != minor_second )); then
         echo "$(( minor_first - minor_second ))"
+    else
+        echo "$(( micro_first - micro_second ))"
     fi
 }
 
 version_extract() {
-    echo "$( expr "$1" : '.*-\([[:digit:]]\+\.[[:digit:]]\+\).*' )"
+    echo "$( expr "$1" : ".*-\(${VERSION_PATTERN}\).*" )"
 }
 
 version_installed() {
@@ -39,14 +45,14 @@ install() {
     local dest="$1"
     local archive=${2}
 
-    info "Moving ${dest} to ${dest}.stable..."
+    info "Moving '${dest}' to '${dest}.stable' ..."
     rm -rf "${dest}.stable"
     mv -Tf "$dest" "${dest}.stable" &> /dev/null || true
-    info "Extracting ${archive}..."
+    info "Extracting '${archive}' ..."
     rm -rf _extracted
     mkdir _extracted
     tar xzf "$archive" -C _extracted
-    info "Moving $(ls _extracted) to ${dest}..."
+    info "Moving '$(ls _extracted)' to '${dest}' ..."
     mv -Tf _extracted/* "$dest"
     rm -rf _extracted
 }
@@ -60,6 +66,7 @@ info() {
 SOFTWARE_HOME="/usr/local/software"
 
 cd "$SOFTWARE_HOME"
+
 for file_name in $(ls); do
     VERSION=$( version_extract "$file_name" )
     if [[ -n "$VERSION" ]]; then
@@ -84,7 +91,8 @@ for file_name in $(ls); do
                     MAX_PYCHARM_PC_VERSION="$VERSION"
                 fi
                 ;;
-            *) continue ;;
+            *) continue 
+                ;;
         esac
     fi
 done
