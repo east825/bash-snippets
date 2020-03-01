@@ -16,7 +16,7 @@ PROG_NAME="$(basename $0)"
 
 USAGE="\
 Usage:
-    $PROG_NAME [--self-signed|--CA|--signed-by CERT KEY] NAME
+    $PROG_NAME [--self-signed|--CA|--signed-by CERT:KEY] NAME
 
 Options:
     -C, --country COUNTRY               Country (C) field. Two letter code. [default: RU]
@@ -35,11 +35,11 @@ Options:
     --CA                                Generate self-signed certificate authority.
     --signed-by CERT KEY                Generate certificate signed by authority specified by certificate
                                         and private key pair, separated by colon.
-                                        If neither of modes specified generated certificate will be signed
+                                        If neither of modes specified, generated certificate will be signed
                                         by system default authority.
 
-    --pkcs12                            Export genearated certificate/key pair in PKCS12 format (.p12)
-    --password                          Passphrase for PKCS12 archive. [default: NAME]
+    --pkcs12                            Export generated certificate/key pair in PKCS12 format (.p12)
+    --password PASSWORD                 Passphrase for PKCS12 archive. [default: NAME]
 
     -v, --verbose                       Print output of openssl commands.
     --keep                              Do not delete openssl database and index at the end and use existing if any.
@@ -49,7 +49,7 @@ Arguments:
     NAME                                Name of output certificate, private key or CSR without extension.
 
 Example:
-    ${PROG_NAME} --pkcs12 --signed-by root.crt root.key --CN client.unit-371 --OU 'Client Authentication' client-auth
+    ${PROG_NAME} --pkcs12 --signed-by root.crt:root.key --CN client.unit-371 --OU 'Client Authentication' client-auth
 "
 
 COUNTRY="RU"
@@ -59,7 +59,7 @@ ORGANIZATION="JetBrains"
 ORGANIZATIONAL_UNIT="Certificates Tests"
 EMAIL="mikhail.golubev@jetbrains.com"
 
-MODE="default"
+MODE="default" # self-signed|signed-by|CA
 
 DEFAULT_KEY_LENGTH=4096
 DEFAULT_PERIOD=3650 # days
@@ -126,7 +126,7 @@ while (( $# > 0 )); do
         --CA)
             MODE="CA"; shift;;
         --signed-by)
-            MODE="signed"
+            MODE="signed-by"
             CA_CERTIFICATE="$( echo "$2" | cut -sd: -f1 )"
             CA_KEY="$( echo "$2" | cut -sd: -f2 )"
             if [[ -z "$CA_CERTIFICATE" || -z "$CA_KEY" ]]; then
