@@ -41,6 +41,7 @@ Options:
     --pkcs12                            Export generated certificate/key pair in PKCS12 format (.p12)
     --password PASSWORD                 Passphrase for PKCS12 archive. [default: NAME]
 
+    --der                               Use binary DER format for certificates. [default: PEM]
     -v, --verbose                       Print output of openssl commands.
     --keep                              Do not delete openssl database and index at the end and use existing if any.
     -h, --help                          Print this help and exit.
@@ -63,6 +64,8 @@ MODE="default" # self-signed|signed-by|CA
 
 DEFAULT_KEY_LENGTH=4096
 DEFAULT_PERIOD=3650 # days
+DEFAULT_FORMAT=PEM
+DEFAULT_EXT=crt
 
 error() {
     echo "Error: $1" >&2
@@ -87,6 +90,7 @@ ARGS=$(getopt -n "$PROG_NAME" \
         --long help,verbose,keep,self-signed,signed-by:,CA,pkcs12,password: \
         --long country:,locality:,ST:,state:,organization:,OU:,organizational-unit:,CN:,common-name:,email: \
         --long start-date:,end-date: \
+        --long der \
         -- "$@")
 
 eval set -- "$ARGS"
@@ -125,6 +129,10 @@ while (( $# > 0 )); do
             PASSWORD="${2:? Error. Password expected}"; shift 2;;
         --CA)
             MODE="CA"; shift;;
+        --der)
+            DEFAULT_FORMAT=DER
+            DEFAULT_EXT=der
+            shift;;
         --signed-by)
             MODE="signed-by"
             CA_CERTIFICATE="$( echo "$2" | cut -sd: -f1 )"
@@ -241,17 +249,19 @@ fi
 if [[ "$MODE" == "self-signed" ]]; then
     message "Generating self-signed certificate for ${COMMON_NAME}..."
     openssl req -verbose -x509 -nodes -sha512 -newkey rsa:${DEFAULT_KEY_LENGTH} \
+        -outform "$DEFAULT_FORMAT" \
         -days "$DEFAULT_PERIOD" \
         -config "config.cfg" \
-        -keyout "${NAME}.key" -out "${NAME}.crt" 2>&1 | debug
+        -keyout "${NAME}.key" -out "${NAME}.${DEFAULT_EXT}" 2>&1 | debug
 
 elif [[ "$MODE" == "CA" ]]; then
     message "Generating certificate authority for ${COMMON_NAME}..."
     openssl req -verbose -x509 -nodes -sha512 -newkey rsa:${DEFAULT_KEY_LENGTH} \
+        -outform "$DEFAULT_FORMAT" \
         -days "$DEFAULT_PERIOD" \
         -extensions v3_ca \
         -config "config.cfg" \
-        -keyout "${NAME}.key" -out "${NAME}.crt" 2>&1 | debug
+        -keyout "${NAME}.key" -out "${NAME}.${DEFAULT_EXT}" 2>&1 | debug
 
 else
     message "Generating CSR for ${COMMON_NAME}..."
